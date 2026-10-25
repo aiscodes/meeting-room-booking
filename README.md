@@ -80,6 +80,7 @@ src/
   domain/      правила (booking.ts), тексты ошибок (messages.ts), работа со временем (time.ts)
   api/         клиент bookingsApi и типизированные ошибки
   features/    хуки запросов, логика формы, компоненты
+  components/  базовый UI-кит: Button, FormField, Select (без бизнес-логики)
   mocks/       mock-сервер на MSW и панель сценариев
   app/         страница и сборка экрана
 ```

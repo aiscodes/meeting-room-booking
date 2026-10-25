@@ -17,7 +17,7 @@ export function createMockControls(initial: Partial<MockControls> = {}): MockCon
     get: () => state,
     set(patch) {
       state = { ...state, ...patch };
-      listeners.forEach((l) => l());
+      for (const listener of listeners) listener();
     },
     subscribe(listener) {
       listeners.add(listener);

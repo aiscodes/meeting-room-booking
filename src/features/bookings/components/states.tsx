@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 export function TimelineSkeleton() {
   return (
     <div className="space-y-3 py-4" aria-hidden>
-      {[60, 35, 80, 45, 70].map((width, i) => (
-        <div key={i} className="flex items-center gap-3">
+      {[60, 35, 80, 45, 70].map((width) => (
+        <div key={width} className="flex items-center gap-3">
           <div className="h-3 w-10 animate-pulse rounded bg-slate-200" />
           <div className="h-12 animate-pulse rounded-lg bg-slate-100" style={{ width: `${width}%` }} />
         </div>

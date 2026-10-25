@@ -16,6 +16,11 @@
   label:has(> input[type="checkbox"]) {
     cursor: pointer;
   }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.55;
+  }
 }
 
 body {
@@ -36,7 +41,7 @@ body {
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms;
+    transition-duration: 0.01ms;
   }
 }

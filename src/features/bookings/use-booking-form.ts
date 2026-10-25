@@ -73,9 +73,10 @@ export function useBookingForm({ target, date, onDone, onConflict }: BookingForm
   });
   const { register, handleSubmit, setValue, getValues, setError, trigger, formState } = form;
 
+  const scheduleUpdatedAt = schedule.dataUpdatedAt;
   useEffect(() => {
-    if (problem?.tone === "warning") void trigger();
-  }, [bookings, problem, trigger]);
+    if (problem?.tone === "warning" && scheduleUpdatedAt > 0) void trigger();
+  }, [scheduleUpdatedAt, problem, trigger]);
 
   const start = useWatch({ control: form.control, name: "start" });
   const end = useWatch({ control: form.control, name: "end" });

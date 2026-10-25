@@ -1,5 +1,6 @@
 import type { Ref, SelectHTMLAttributes } from "react";
-import { controlClassName } from "@/components/ui/form-field";
+import { controlBaseClassName } from "@/components/ui/form-field";
+import { Select } from "@/components/ui/select";
 import type { TimeOption } from "@/domain/booking";
 import { formatMinutes } from "@/domain/messages";
 import { MAX_DURATION } from "@/domain/time";
@@ -17,7 +18,7 @@ type Props = SelectHTMLAttributes<HTMLSelectElement> & {
 
 export function TimeSelect({ options, ...props }: Props) {
   return (
-    <select {...props} className={`${controlClassName} tabular-nums`}>
+    <Select {...props} wrapperClassName="mt-1.5" className={`${controlBaseClassName} tabular-nums`}>
       <option value="" disabled>
         Выберите
       </option>
@@ -26,6 +27,6 @@ export function TimeSelect({ options, ...props }: Props) {
           {o.reason ? `${o.value} — ${HINTS[o.reason]}` : o.value}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }

@@ -1,6 +1,6 @@
 import { type ReactNode, useId } from "react";
 
-export type ControlProps = {
+type ControlProps = {
   id: string;
   "aria-invalid": true | undefined;
   "aria-describedby": string | undefined;
@@ -37,5 +37,7 @@ export function FormField({ label, error, invalid, describedBy, children }: Prop
   );
 }
 
-export const controlClassName =
-  "mt-1.5 block min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-2 focus:outline-indigo-200 aria-invalid:border-red-500 sm:text-sm";
+export const controlBaseClassName =
+  "block min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-2 focus:outline-indigo-200 aria-invalid:border-red-500 sm:text-sm";
+
+export const controlClassName = `mt-1.5 ${controlBaseClassName}`;

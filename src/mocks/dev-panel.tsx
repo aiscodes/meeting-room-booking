@@ -6,6 +6,7 @@ import { FlaskConical, X } from "lucide-react";
 import { useId, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { firstFreeStart, suggestEnd } from "@/domain/booking";
 import type { ISODate } from "@/domain/time";
 import type { MockControlsStore } from "./controls";
@@ -21,6 +22,7 @@ export function DevPanel({ date }: { date: ISODate }) {
 function Panel({ date, store, controls }: { date: ISODate; store: BookingStore; controls: MockControlsStore }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const latencyId = useId();
   const state = useSyncExternalStore(controls.subscribe, controls.get, controls.get);
   const queryClient = useQueryClient();
 
@@ -47,9 +49,8 @@ function Panel({ date, store, controls }: { date: ISODate; store: BookingStore; 
   return (
     <div className="fixed right-4 bottom-4 z-30 flex flex-col items-end gap-2">
       {open && (
-        <div
+        <section
           id={panelId}
-          role="region"
           aria-label="Управление mock API"
           className="w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-lg"
         >
@@ -83,24 +84,27 @@ function Panel({ date, store, controls }: { date: ISODate; store: BookingStore; 
               checked={state.failNextRequest}
               onChange={(failNextRequest) => controls.set({ failNextRequest })}
             />
-            <label className="flex items-center justify-between gap-3">
-              <span className="text-slate-800">Задержка ответа</span>
-              <select
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor={latencyId} className="text-slate-800">
+                Задержка ответа
+              </label>
+              <Select
+                id={latencyId}
                 value={state.latencyMs}
                 onChange={(e) => controls.set({ latencyMs: Number(e.target.value) })}
-                className="min-h-9 rounded-lg border border-slate-300 bg-white px-2"
+                className="min-h-9 rounded-lg border border-slate-300 bg-white pl-3 text-slate-900 focus-visible:outline-2 focus-visible:outline-indigo-600"
               >
                 <option value={0}>нет</option>
                 <option value={400}>400 мс</option>
                 <option value={1500}>1,5 с</option>
                 <option value={4000}>4 с</option>
-              </select>
-            </label>
+              </Select>
+            </div>
             <Button variant="ghost" className="w-full" onClick={reset}>
               Сбросить данные
             </Button>
           </div>
-        </div>
+        </section>
       )}
       <button
         type="button"
