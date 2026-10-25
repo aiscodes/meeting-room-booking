@@ -26,20 +26,23 @@ export type BookingInput = Omit<Booking, "id">;
 
 export const TITLE_MAX_LENGTH = 80;
 
-export type ViolationCode =
-  | "invalid_date"
-  | "missing_start"
-  | "missing_end"
-  | "past_date"
-  | "off_grid"
-  | "start_outside_hours"
-  | "end_outside_hours"
-  | "end_not_after_start"
-  | "too_short"
-  | "too_long"
-  | "past_time"
-  | "title_too_long"
-  | "overlap";
+export const VIOLATION_CODES = [
+  "invalid_date",
+  "missing_start",
+  "missing_end",
+  "past_date",
+  "off_grid",
+  "start_outside_hours",
+  "end_outside_hours",
+  "end_not_after_start",
+  "too_short",
+  "too_long",
+  "past_time",
+  "title_too_long",
+  "overlap",
+] as const;
+
+export type ViolationCode = (typeof VIOLATION_CODES)[number];
 
 export type Violation = {
   code: ViolationCode;

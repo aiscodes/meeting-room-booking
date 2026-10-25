@@ -26,10 +26,15 @@ export function fromMinutes(minutes: number): ClockTime {
   return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
 }
 
-export function isValidDate(value: string): boolean {
+function dateParts(value: string): { y: number; m: number; d: number } | null {
   const match = DATE_RE.exec(value);
-  if (!match) return false;
-  const [, y, m, d] = match.map(Number);
+  return match ? { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) } : null;
+}
+
+export function isValidDate(value: string): boolean {
+  const parts = dateParts(value);
+  if (!parts) return false;
+  const { y, m, d } = parts;
   const date = new Date(y, m - 1, d);
   return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
 }
@@ -40,8 +45,9 @@ export function toISODate(date: Date): ISODate {
 }
 
 export function parseISODate(value: ISODate): Date {
-  const [y, m, d] = value.split("-").map(Number);
-  return new Date(y, m - 1, d);
+  const parts = dateParts(value);
+  if (!parts) throw new RangeError(`Invalid date: ${value}`);
+  return new Date(parts.y, parts.m - 1, parts.d);
 }
 
 export function addDays(value: ISODate, delta: number): ISODate {

@@ -17,8 +17,8 @@ async function caught(promise: Promise<unknown>): Promise<ApiError> {
     () => undefined,
     (e: unknown) => e,
   );
-  expect(error).toBeInstanceOf(ApiError);
-  return error as ApiError;
+  if (!(error instanceof ApiError)) throw new Error(`Expected an ApiError, got ${String(error)}`);
+  return error;
 }
 
 describe("bookingsApi", () => {

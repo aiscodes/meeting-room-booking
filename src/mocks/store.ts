@@ -1,3 +1,4 @@
+import { bookingListSchema } from "@/api/contract";
 import type { Booking, BookingInput } from "@/domain/booking";
 import { addDays, type ISODate, toISODate } from "@/domain/time";
 
@@ -63,7 +64,10 @@ export const localStoragePersistence: Persistence = {
   load() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as Booking[]) : null;
+      if (!raw) return null;
+      // Corrupted or outdated data falls back to the seed instead of breaking the app.
+      const parsed = bookingListSchema.safeParse(JSON.parse(raw));
+      return parsed.success ? parsed.data : null;
     } catch {
       return null;
     }

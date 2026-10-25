@@ -56,7 +56,7 @@ function Panel({ date, store, controls }: { date: ISODate; store: BookingStore; 
         >
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="font-semibold text-slate-900">Mock API</p>
+              <h2 className="font-semibold text-slate-900">Mock API</h2>
               <p className="mt-0.5 text-xs text-slate-500">Сценарии сети для демонстрации. Данные — в localStorage.</p>
             </div>
             <button

@@ -156,7 +156,7 @@ function BookingBlock({
   const content = (
     <>
       <span className={clsx("flex min-w-0 gap-x-2", compact ? "items-center" : "flex-col")}>
-        <span className={clsx("truncate font-medium", !booking.title && "italic")}>{title}</span>
+        <span className={clsx("truncate font-medium", !booking.title && "italic")}>{title}</span>{" "}
         <span className="shrink-0 text-xs tabular-nums">{range}</span>
       </span>
       {locked && (
@@ -190,10 +190,10 @@ function BookingBlock({
         <button
           type="button"
           onClick={() => onEdit(booking)}
-          aria-label={`${title}, ${range}. Изменить`}
           className={clsx(shell, "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600")}
         >
           {content}
+          <span className="sr-only">. Изменить</span>
         </button>
       )}
     </li>

@@ -44,7 +44,7 @@ function renderPage() {
 const schedule = () => screen.getByRole("list", { name: /Расписание/, hidden: true });
 
 async function openNewBooking(user: ReturnType<typeof userEvent.setup>) {
-  await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ });
+  await screen.findByRole("button", { name: /Стендап 09:00–10:00/ });
   await user.click(screen.getByRole("button", { name: "Новая бронь" }));
   return screen.findByRole("dialog");
 }
@@ -60,7 +60,7 @@ describe("BookingApp", () => {
     await user.click(within(dialog).getByRole("button", { name: "Забронировать" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(await screen.findByRole("button", { name: /Планирование, 10:00–11:00/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Планирование 10:00–11:00/ })).toBeInTheDocument();
     expect(store.list(TODAY)).toHaveLength(2);
   });
 
@@ -87,7 +87,7 @@ describe("BookingApp", () => {
     await user.click(within(dialog).getByRole("button", { name: "Забронировать" }));
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(await screen.findByRole("button", { name: /Планирование, 10:00–10:30/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Планирование 10:00–10:30/ })).toBeInTheDocument();
   });
 
   it("handles a server-side race when the UI data is fresh", async () => {
@@ -119,7 +119,7 @@ describe("BookingApp", () => {
 
   it("edits a booking without conflicting with itself, then deletes it", async () => {
     const user = renderPage();
-    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ }));
+    await user.click(await screen.findByRole("button", { name: /Стендап 09:00–10:00/ }));
     const dialog = await screen.findByRole("dialog", { name: "Изменить бронь" });
 
     await user.selectOptions(within(dialog).getByLabelText("Окончание"), "10:30");
@@ -127,7 +127,7 @@ describe("BookingApp", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(store.get("standup")?.end).toBe("10:30");
 
-    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:30/ }));
+    await user.click(await screen.findByRole("button", { name: /Стендап 09:00–10:30/ }));
     await user.click(await screen.findByRole("button", { name: "Удалить" }));
     const confirm = await screen.findByRole("alertdialog");
     await user.click(within(confirm).getByRole("button", { name: "Удалить" }));
@@ -139,7 +139,7 @@ describe("BookingApp", () => {
 
   it("moves a booking to another date and follows it there", async () => {
     const user = renderPage();
-    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ }));
+    await user.click(await screen.findByRole("button", { name: /Стендап 09:00–10:00/ }));
     const dialog = await screen.findByRole("dialog", { name: "Изменить бронь" });
 
     const date = within(dialog).getByLabelText("Дата");
@@ -150,14 +150,14 @@ describe("BookingApp", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(store.get("standup")).toMatchObject({ date: "2030-01-16", start: "09:00", end: "10:00" });
     expect(window.location.search).toBe("?date=2030-01-16");
-    expect(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Стендап 09:00–10:00/ })).toBeInTheDocument();
     expect(store.list(TODAY)).toHaveLength(0);
   });
 
   it("re-times the booking when the new date is busy at that time", async () => {
     store.insert({ date: "2030-01-16", start: "09:00", end: "10:00", title: "Занято" });
     const user = renderPage();
-    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ }));
+    await user.click(await screen.findByRole("button", { name: /Стендап 09:00–10:00/ }));
     const dialog = await screen.findByRole("dialog", { name: "Изменить бронь" });
 
     const date = within(dialog).getByLabelText("Дата");
@@ -170,7 +170,7 @@ describe("BookingApp", () => {
 
   it("navigates between dates with the browser back button", async () => {
     const user = renderPage();
-    await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ });
+    await screen.findByRole("button", { name: /Стендап 09:00–10:00/ });
 
     await user.click(screen.getByRole("button", { name: "Следующий день" }));
     expect(await screen.findByText("На эту дату броней нет.")).toBeInTheDocument();
@@ -179,13 +179,13 @@ describe("BookingApp", () => {
     expect(document.title).toBe("Среда, 16 января · Бронирование переговорной");
 
     window.history.back();
-    expect(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Стендап 09:00–10:00/ })).toBeInTheDocument();
     expect(window.location.search).toBe("");
   });
 
   it("explains that a booking has started while its form was open", async () => {
     const user = renderPage();
-    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ }));
+    await user.click(await screen.findByRole("button", { name: /Стендап 09:00–10:00/ }));
     const dialog = await screen.findByRole("dialog", { name: "Изменить бронь" });
 
     user.setNow(new Date(2030, 0, 15, 9, 15));
@@ -210,6 +210,6 @@ describe("BookingApp", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Не удалось загрузить бронирования");
     await user.click(screen.getByRole("button", { name: "Повторить" }));
-    expect(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Стендап 09:00–10:00/ })).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Booking, Violation } from "@/domain/booking";
+import { type Booking, VIOLATION_CODES, type Violation } from "@/domain/booking";
 import { isValidDate, isValidTime } from "@/domain/time";
 
 export type ApiViolation = Violation & { message: string };
@@ -22,12 +22,12 @@ export const bookingSchema: z.ZodType<Booking> = z.object({
 
 export const bookingListSchema = z.array(bookingSchema);
 
-const violationSchema = z.object({
-  code: z.string(),
+const violationSchema: z.ZodType<ApiViolation> = z.object({
+  code: z.enum(VIOLATION_CODES),
   field: z.enum(["date", "start", "end", "title"]),
   message: z.string(),
   conflictWith: bookingSchema.optional(),
-}) as z.ZodType<ApiViolation>;
+});
 
 export const apiErrorBodySchema: z.ZodType<ApiErrorBody> = z.object({
   error: z.object({

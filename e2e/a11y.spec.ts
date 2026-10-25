@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
-const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
+// "experimental" adds label-content-name-mismatch (WCAG 2.5.3), which Lighthouse checks but axe keeps off by default.
+const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "experimental"];
 
 async function expectNoViolations(page: Page) {
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();

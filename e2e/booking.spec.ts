@@ -26,17 +26,17 @@ test("creates, edits and deletes a booking", async ({ page }) => {
 
   const dialog = await createBooking(page, "Смоук-тест");
   await expect(dialog).toBeHidden();
-  const booking = page.getByRole("button", { name: /Смоук-тест, 09:00–10:00/ });
+  const booking = page.getByRole("button", { name: /Смоук-тест 09:00–10:00/ });
   await expect(booking).toBeVisible();
 
   await booking.click();
   const edit = page.getByRole("dialog", { name: "Изменить бронь" });
   await edit.getByLabel("Окончание").selectOption("10:30");
   await edit.getByRole("button", { name: "Сохранить" }).click();
-  await expect(page.getByRole("button", { name: /Смоук-тест, 09:00–10:30/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Смоук-тест 09:00–10:30/ })).toBeVisible();
 
   await page.reload();
-  await page.getByRole("button", { name: /Смоук-тест, 09:00–10:30/ }).click();
+  await page.getByRole("button", { name: /Смоук-тест 09:00–10:30/ }).click();
   await page.getByRole("dialog", { name: "Изменить бронь" }).getByRole("button", { name: "Удалить" }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Удалить" }).click();
   await expect(page.getByText("На эту дату броней нет.")).toBeVisible();
@@ -46,13 +46,13 @@ test("moves a booking to another date and returns with the back button", async (
   await openEmptyDay(page);
   await createBooking(page, "Перенос");
 
-  await page.getByRole("button", { name: /Перенос, 09:00–10:00/ }).click();
+  await page.getByRole("button", { name: /Перенос 09:00–10:00/ }).click();
   const edit = page.getByRole("dialog", { name: "Изменить бронь" });
   await edit.getByLabel("Дата").fill(futureDate(8));
   await edit.getByRole("button", { name: "Сохранить" }).click();
 
   await expect(page).toHaveURL(new RegExp(`date=${futureDate(8)}`));
-  await expect(page.getByRole("button", { name: /Перенос, 09:00–10:00/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Перенос 09:00–10:00/ })).toBeVisible();
 
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(`date=${futureDate()}`));
@@ -71,6 +71,6 @@ test("keeps the form and explains a 409 from the server", async ({ page }) => {
   await expect(dialog.getByLabel("Название")).toHaveValue("Важная встреча");
   // The schedule behind an open modal is aria-hidden.
   await expect(
-    page.getByRole("button", { name: /Другой пользователь, 09:00–10:00/, includeHidden: true }),
+    page.getByRole("button", { name: /Другой пользователь 09:00–10:00/, includeHidden: true }),
   ).toBeAttached();
 });

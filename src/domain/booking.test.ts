@@ -77,10 +77,9 @@ describe("validateBooking", () => {
 
   it("rule 5: rejects overlaps and reports the conflicting booking", () => {
     const existing = [booking("10:00", "11:00", { title: "Стендап" })];
-    const [violation] = validateBooking(input("10:30", "11:30"), existing, NOW);
-    expect(violation.code).toBe("overlap");
-    expect(violation.conflictWith?.id).toBe(existing[0].id);
-    expect(violationMessage(violation)).toBe("Пересекается с бронью 10:00–11:00 «Стендап»");
+    const violations = validateBooking(input("10:30", "11:30"), existing, NOW);
+    expect(violations).toMatchObject([{ code: "overlap", conflictWith: { id: existing[0]?.id } }]);
+    expect(violations.map(violationMessage)).toEqual(["Пересекается с бронью 10:00–11:00 «Стендап»"]);
   });
 
   it("rule 5: allows touching an existing booking on both sides", () => {
@@ -146,13 +145,13 @@ describe("slot options", () => {
     const existing = [booking("11:00", "12:00", { date: TODAY })];
     const options = startOptions(TODAY, existing, NOW);
     const byValue = Object.fromEntries(options.map((o) => [o.value, o]));
-    expect(options[0].value).toBe("09:00");
+    expect(options[0]?.value).toBe("09:00");
     expect(options.at(-1)?.value).toBe("17:30");
-    expect(byValue["10:00"].reason).toBe("past");
-    expect(byValue["10:30"].disabled).toBe(false);
-    expect(byValue["11:00"].reason).toBe("busy");
-    expect(byValue["11:30"].reason).toBe("busy");
-    expect(byValue["12:00"].disabled).toBe(false);
+    expect(byValue["10:00"]?.reason).toBe("past");
+    expect(byValue["10:30"]?.disabled).toBe(false);
+    expect(byValue["11:00"]?.reason).toBe("busy");
+    expect(byValue["11:30"]?.reason).toBe("busy");
+    expect(byValue["12:00"]?.disabled).toBe(false);
   });
 
   it("limits end options by duration and the next booking", () => {
