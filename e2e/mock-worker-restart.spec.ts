@@ -10,6 +10,9 @@ async function setVisibility(page: Page, state: "hidden" | "visible") {
 test("keeps mocking after the browser restarts the service worker", async ({ page, browserName }) => {
   test.skip(browserName !== "chromium", "Stopping workers needs the Chrome DevTools Protocol");
 
+  const beforeWorkday = new Date();
+  beforeWorkday.setHours(8, 0, 0, 0);
+  await page.clock.setFixedTime(beforeWorkday);
   await page.goto("/");
   await expect(page.getByRole("button", { name: /Стендап 09:30–10:00/ })).toBeVisible();
 
