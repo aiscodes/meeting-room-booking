@@ -27,13 +27,13 @@ export function MockGate({ children, fallback }: { children: ReactNode; fallback
   let content: ReactNode = fallback;
   if (failure) {
     content = (
-      <main className="mx-auto max-w-md px-4 py-16 text-center">
-        <h1 className="text-lg font-semibold text-slate-900">Не удалось запустить mock API</h1>
+      <div role="alert" className="mx-auto max-w-md py-16 text-center">
+        <h2 className="text-lg font-semibold text-slate-900">Не удалось запустить mock API</h2>
         <p className="mt-2 text-sm text-slate-600">
           Демо работает через Service Worker. Откройте страницу в обычном окне современного браузера.
         </p>
         <p className="mt-4 text-xs text-slate-500">{failure}</p>
-      </main>
+      </div>
     );
   } else if (api) {
     content = <MockApiContext value={api}>{children}</MockApiContext>;

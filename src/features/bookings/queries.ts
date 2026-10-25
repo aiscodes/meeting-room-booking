@@ -16,7 +16,6 @@ export const bookingsQuery = (date: ISODate) =>
     queryFn: ({ signal }) => bookingsApi.list(date, signal),
   });
 
-// Polling stands in for push updates: other users' bookings show up without a reload.
 export function useBookings(date: ISODate) {
   return useQuery({ ...bookingsQuery(date), refetchInterval: POLL_MS });
 }

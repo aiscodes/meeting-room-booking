@@ -15,6 +15,23 @@ export function TimelineSkeleton() {
   );
 }
 
+export function ScheduleSkeleton() {
+  return (
+    <div role="status">
+      <span className="sr-only">Загружаем расписание…</span>
+      <div className="flex gap-1.5 sm:gap-2" aria-hidden>
+        <div className="size-10 animate-pulse rounded-lg bg-slate-200" />
+        <div className="h-10 flex-1 animate-pulse rounded-lg bg-slate-200 sm:max-w-44" />
+        <div className="size-10 animate-pulse rounded-lg bg-slate-200" />
+      </div>
+      <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-hidden>
+        <div className="h-7 w-56 animate-pulse rounded bg-slate-200" />
+        <TimelineSkeleton />
+      </div>
+    </div>
+  );
+}
+
 export function LoadError({ message, retrying, onRetry }: { message: string; retrying: boolean; onRetry: () => void }) {
   return (
     <div role="alert" className="my-6 flex flex-col items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-900">
@@ -49,7 +66,7 @@ export function Notice({ icon, children }: { icon: "closed" | "empty"; children:
   return (
     <div className="mb-3 flex gap-3 rounded-lg bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
       <Icon className="mt-0.5 size-4 shrink-0 text-slate-500" aria-hidden />
-      <div>{children}</div>
+      <div className="text-pretty">{children}</div>
     </div>
   );
 }

@@ -9,11 +9,13 @@ export type ControlProps = {
 type Props = {
   label: ReactNode;
   error?: string;
+  /** Marks the control invalid when its message is rendered elsewhere (linked through `describedBy`). */
+  invalid?: boolean;
   describedBy?: string;
   children: (control: ControlProps) => ReactNode;
 };
 
-export function FormField({ label, error, describedBy, children }: Props) {
+export function FormField({ label, error, invalid, describedBy, children }: Props) {
   const id = useId();
   const errorId = `${id}-error`;
   return (
@@ -23,7 +25,7 @@ export function FormField({ label, error, describedBy, children }: Props) {
       </label>
       {children({
         id,
-        "aria-invalid": error ? true : undefined,
+        "aria-invalid": error || invalid ? true : undefined,
         "aria-describedby": [error && errorId, describedBy].filter(Boolean).join(" ") || undefined,
       })}
       {error && (

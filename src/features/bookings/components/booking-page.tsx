@@ -5,9 +5,8 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { errorMessage } from "@/api/errors";
 import { Button } from "@/components/ui/button";
 import { earliestStart, firstFreeStart, sortByStart } from "@/domain/booking";
-import { DURATION_LIMITS_LABEL, WORKDAY_LABEL } from "@/domain/messages";
 import { type ISODate, addDays, toISODate } from "@/domain/time";
-import { formatDateHeading } from "../format";
+import { formatBookingCount, formatDateHeading } from "../format";
 import { useNow } from "../now";
 import { useBookings } from "../queries";
 import type { BookingFormTarget } from "../use-booking-form";
@@ -31,6 +30,12 @@ export function BookingPage({ date, onDateChange }: Props) {
   const [target, setTarget] = useState<BookingFormTarget | null>(null);
   const [highlightId, setHighlightId] = useState<string | null>(null);
 
+  const heading = formatDateHeading(date);
+
+  useEffect(() => {
+    document.title = `${heading} · Бронирование переговорной`;
+  }, [heading]);
+
   useEffect(() => {
     if (!highlightId) return;
     const timer = window.setTimeout(() => setHighlightId(null), HIGHLIGHT_MS);
@@ -43,15 +48,11 @@ export function BookingPage({ date, onDateChange }: Props) {
   const relative = date === today ? "Сегодня" : date === addDays(today, 1) ? "Завтра" : null;
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 pt-6 pb-28 sm:pt-10">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Переговорная</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Бронирование на рабочий день {WORKDAY_LABEL}, {DURATION_LIMITS_LABEL}.
-        </p>
-      </header>
-
+    <>
       <DateNavigator date={date} today={today} onChange={onDateChange} />
+      <p className="sr-only" aria-live="polite">
+        {query.data && `${heading}: ${formatBookingCount(bookings.length)}`}
+      </p>
 
       <section
         aria-labelledby={headingId}
@@ -60,7 +61,7 @@ export function BookingPage({ date, onDateChange }: Props) {
       >
         <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2">
           <h2 id={headingId} className="text-lg font-semibold text-slate-900">
-            {formatDateHeading(date)}
+            {heading}
           </h2>
           {relative && (
             <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">{relative}</span>
@@ -75,7 +76,7 @@ export function BookingPage({ date, onDateChange }: Props) {
           </span>
           <Button
             variant="primary"
-            className="ml-auto"
+            className="w-full sm:ml-auto sm:w-auto"
             disabled={!canCreate}
             onClick={() => setTarget({ mode: "create" })}
           >
@@ -120,7 +121,7 @@ export function BookingPage({ date, onDateChange }: Props) {
         onSaved={onDateChange}
         onConflict={setHighlightId}
       />
-    </main>
+    </>
   );
 }
 

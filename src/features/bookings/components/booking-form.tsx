@@ -29,6 +29,8 @@ export function BookingForm(props: BookingFormOptions) {
   } = useBookingForm(props);
   const durationId = useId();
   const scheduleStatusId = useId();
+  const timeErrorId = useId();
+  const timeErrors = [...new Set([errors.start?.message, errors.end?.message])].filter((m) => m !== undefined);
 
   return (
     <form onSubmit={submit} noValidate className="mt-5 space-y-5">
@@ -65,13 +67,24 @@ export function BookingForm(props: BookingFormOptions) {
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        <FormField label="Начало" error={errors.start?.message}>
+        <FormField label="Начало" invalid={!!errors.start} describedBy={errors.start && timeErrorId}>
           {(control) => <TimeSelect {...control} {...fields.start} options={startChoices} />}
         </FormField>
-        <FormField label="Окончание" error={errors.end?.message} describedBy={durationId}>
+        <FormField
+          label="Окончание"
+          invalid={!!errors.end}
+          describedBy={[errors.end && timeErrorId, durationId].filter(Boolean).join(" ")}
+        >
           {(control) => <TimeSelect {...control} {...fields.end} options={endChoices} />}
         </FormField>
       </div>
+      {timeErrors.length > 0 && (
+        <div id={timeErrorId} className="-mt-3 space-y-1 text-sm text-pretty text-red-700">
+          {timeErrors.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
+        </div>
+      )}
 
       <p id={durationId} className="text-sm text-slate-600">
         Длительность: {duration ?? DURATION_LIMITS_LABEL}
@@ -108,7 +121,7 @@ function ProblemAlert({ problem }: { problem: WriteProblem | null }) {
           )}
         >
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <p>{problem.message}</p>
+          <p className="text-pretty">{problem.message}</p>
         </div>
       )}
     </div>

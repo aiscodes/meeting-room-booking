@@ -123,7 +123,7 @@ function FreeSlot({ start, onCreate }: { start: number; onCreate: (start: string
         type="button"
         onClick={() => onCreate(fromMinutes(start))}
         aria-label={`Свободно ${range}. Создать бронь`}
-        className="flex h-full w-full items-center gap-1.5 rounded-lg border border-dashed border-transparent px-3 text-left text-xs text-slate-500 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:border-indigo-500 focus-visible:bg-indigo-50 focus-visible:text-indigo-700 focus-visible:outline-none"
+        className="flex h-full w-full items-center gap-1.5 rounded-lg border border-dashed border-transparent px-3 text-left text-xs text-slate-500 transition-colors hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:bg-indigo-50 focus-visible:text-indigo-700 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600"
       >
         <Plus className="size-3.5" aria-hidden />
         <span className="tabular-nums">{fromMinutes(start)}</span>
@@ -157,7 +157,7 @@ function BookingBlock({
     <>
       <span className={clsx("flex min-w-0 gap-x-2", compact ? "items-center" : "flex-col")}>
         <span className={clsx("truncate font-medium", !booking.title && "italic")}>{title}</span>
-        <span className="shrink-0 text-xs tabular-nums opacity-80">{range}</span>
+        <span className="shrink-0 text-xs tabular-nums">{range}</span>
       </span>
       {locked && (
         <span className="ml-auto inline-flex shrink-0 items-center gap-1 self-start rounded-full bg-white/70 px-2 py-0.5 text-xs">

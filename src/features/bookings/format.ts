@@ -13,6 +13,20 @@ export function formatDateShort(date: ISODate): string {
   return shortFormat.format(parseISODate(date));
 }
 
+const plural = new Intl.PluralRules("ru-RU");
+const BOOKING_WORD: Record<Intl.LDMLPluralRule, string> = {
+  zero: "броней",
+  one: "бронь",
+  two: "брони",
+  few: "брони",
+  many: "броней",
+  other: "брони",
+};
+
+export function formatBookingCount(count: number): string {
+  return count === 0 ? "броней нет" : `${count} ${BOOKING_WORD[plural.select(count)]}`;
+}
+
 export function formatDuration(start: ClockTime, end: ClockTime): string {
   return formatMinutes(toMinutes(end) - toMinutes(start));
 }

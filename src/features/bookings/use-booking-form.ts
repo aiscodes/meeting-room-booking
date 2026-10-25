@@ -44,7 +44,7 @@ export function useBookingForm({ target, date, onDone, onConflict }: BookingForm
   const createBooking = useCreateBooking();
   const updateBooking = useUpdateBooking();
 
-  // The form can move a booking to another day, so it loads that day's schedule itself.
+  // The date can change in the form, so it loads that day's schedule itself.
   const [scheduleDate, setScheduleDate] = useState<ISODate>(editing?.date ?? date);
   const schedule = useBookings(scheduleDate);
   const bookings = schedule.data ?? NO_BOOKINGS;
@@ -82,7 +82,6 @@ export function useBookingForm({ target, date, onDone, onConflict }: BookingForm
 
   const clearProblem = () => setProblem(null);
 
-  // After a date change, keep the chosen times if they still fit that day; otherwise pick the nearest free slot.
   async function retime(day: ISODate) {
     const dayBookings = await queryClient.fetchQuery(bookingsQuery(day)).catch(() => undefined);
     if (!dayBookings || getValues("date") !== day) return;

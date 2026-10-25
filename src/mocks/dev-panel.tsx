@@ -108,14 +108,17 @@ function Panel({ date, store, controls }: { date: ISODate; store: BookingStore; 
         aria-controls={open ? panelId : undefined}
         onClick={() => setOpen((v) => !v)}
         className={clsx(
-          "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
+          "inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full border px-3 text-sm font-medium shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:px-4",
           open ? "border-indigo-200 bg-indigo-50 text-indigo-800" : "border-slate-200 bg-white text-slate-700",
         )}
       >
         <FlaskConical className="size-4" aria-hidden />
-        Mock API
+        <span className="max-sm:sr-only">Mock API</span>
         {(state.raceNextWrite || state.failNextRequest) && (
-          <span className="size-2 rounded-full bg-amber-500" aria-label="есть активные сценарии" />
+          <>
+            <span className="size-2 rounded-full bg-amber-500" aria-hidden />
+            <span className="sr-only">, есть активные сценарии</span>
+          </>
         )}
       </button>
     </div>

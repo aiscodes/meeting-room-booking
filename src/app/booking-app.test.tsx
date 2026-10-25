@@ -175,6 +175,8 @@ describe("BookingApp", () => {
     await user.click(screen.getByRole("button", { name: "Следующий день" }));
     expect(await screen.findByText("На эту дату броней нет.")).toBeInTheDocument();
     expect(window.location.search).toBe("?date=2030-01-16");
+    expect(screen.getByText("Среда, 16 января: броней нет")).toHaveAttribute("aria-live", "polite");
+    expect(document.title).toBe("Среда, 16 января · Бронирование переговорной");
 
     window.history.back();
     expect(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ })).toBeInTheDocument();

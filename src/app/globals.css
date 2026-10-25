@@ -8,6 +8,16 @@
   color-scheme: light;
 }
 
+@layer base {
+  button:not(:disabled),
+  select:not(:disabled),
+  input[type="date"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  label:has(> input[type="checkbox"]) {
+    cursor: pointer;
+  }
+}
+
 body {
   background: var(--color-slate-50);
   color: var(--color-slate-900);

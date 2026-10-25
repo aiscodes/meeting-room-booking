@@ -54,7 +54,7 @@ export function overlaps(a: Interval, b: Interval): boolean {
   return toMinutes(a.start) < toMinutes(b.end) && toMinutes(b.start) < toMinutes(a.end);
 }
 
-export function findConflict(
+function findConflict(
   input: BookingInput,
   bookings: readonly Booking[],
   excludeId?: string,
