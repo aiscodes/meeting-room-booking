@@ -1,70 +1,78 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useEffect, useState } from "react";
 import { type FieldErrors, type Resolver, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
-import { isApiError } from "@/api/errors";
+import { errorMessage, isApiError } from "@/api/errors";
 import {
   type Booking,
-  type Violation,
   endOptions,
   firstFreeStart,
+  isLocked,
   isSelectable,
   startOptions,
   suggestEnd,
   validateBooking,
 } from "@/domain/booking";
-import { violationMessage } from "@/domain/messages";
-import { type ISODate, isValidTime, toMinutes } from "@/domain/time";
+import { BOOKING_STARTED_MESSAGE, violationMessage } from "@/domain/messages";
+import { type ISODate, isValidDate, isValidTime, toISODate, toMinutes } from "@/domain/time";
 import { formatDateShort, formatDuration } from "./format";
 import { useNow } from "./now";
-import { useCreateBooking, useUpdateBooking } from "./queries";
+import { bookingsQuery, useBookings, useCreateBooking, useUpdateBooking } from "./queries";
 import { type WriteProblem, closeIfStale, describeWriteFailure } from "./write-errors";
 
 export type BookingFormTarget = { mode: "create"; start?: string } | { mode: "edit"; booking: Booking };
 
-export type BookingFormValues = { start: string; end: string; title: string };
-
-type Field = keyof BookingFormValues;
-
-const fieldOf = (violation: Violation): Field => (violation.field === "date" ? "start" : violation.field);
+export type BookingFormValues = { date: ISODate; start: string; end: string; title: string };
 
 export type BookingFormOptions = {
   target: BookingFormTarget;
   date: ISODate;
-  bookings: Booking[];
-  onDone: () => void;
+  onDone: (savedDate?: ISODate) => void;
   onConflict: (bookingId: string) => void;
 };
 
-export function useBookingForm({ target, date, bookings, onDone, onConflict }: BookingFormOptions) {
+const NO_BOOKINGS: Booking[] = [];
+
+export function useBookingForm({ target, date, onDone, onConflict }: BookingFormOptions) {
   const now = useNow();
   const editing = target.mode === "edit" ? target.booking : undefined;
   const editingId = editing?.id;
   const [problem, setProblem] = useState<WriteProblem | null>(null);
+  const queryClient = useQueryClient();
   const createBooking = useCreateBooking();
   const updateBooking = useUpdateBooking();
 
+  // The form can move a booking to another day, so it loads that day's schedule itself.
+  const [scheduleDate, setScheduleDate] = useState<ISODate>(editing?.date ?? date);
+  const schedule = useBookings(scheduleDate);
+  const bookings = schedule.data ?? NO_BOOKINGS;
+  const scheduleReady = schedule.data !== undefined;
+
   const resolver: Resolver<BookingFormValues> = (values) => {
+    if (editing && isLocked(editing, now)) {
+      const errors: FieldErrors<BookingFormValues> = { start: { type: "locked", message: BOOKING_STARTED_MESSAGE } };
+      return { values: {}, errors };
+    }
     const violations = validateBooking(
-      { date, start: values.start, end: values.end, title: values.title.trim() || undefined },
+      { date: values.date, start: values.start, end: values.end, title: values.title.trim() || undefined },
       bookings,
       now,
       editingId,
     );
     if (violations.length === 0) return { values, errors: {} };
     const errors: FieldErrors<BookingFormValues> = {};
-    for (const v of violations) errors[fieldOf(v)] ??= { type: v.code, message: violationMessage(v) };
+    for (const v of violations) errors[v.field] ??= { type: v.code, message: violationMessage(v) };
     return { values: {}, errors };
   };
 
   const form = useForm<BookingFormValues>({
     resolver,
-    defaultValues: initialValues(target, date, bookings, now),
+    defaultValues: initialValues(target, scheduleDate, bookings, now),
   });
   const { register, handleSubmit, setValue, getValues, setError, trigger, formState } = form;
 
-  // Re-validate after a 409 refetch to show which booking is in the way.
   useEffect(() => {
     if (problem?.tone === "warning") void trigger();
   }, [bookings, problem, trigger]);
@@ -74,15 +82,39 @@ export function useBookingForm({ target, date, bookings, onDone, onConflict }: B
 
   const clearProblem = () => setProblem(null);
 
+  // After a date change, keep the chosen times if they still fit that day; otherwise pick the nearest free slot.
+  async function retime(day: ISODate) {
+    const dayBookings = await queryClient.fetchQuery(bookingsQuery(day)).catch(() => undefined);
+    if (!dayBookings || getValues("date") !== day) return;
+    const options = { shouldValidate: formState.isSubmitted };
+    let nextStart = getValues("start");
+    if (!isSelectable(startOptions(day, dayBookings, now, editingId), nextStart)) {
+      nextStart = firstFreeStart(day, dayBookings, now, editingId) ?? "";
+      setValue("start", nextStart, options);
+    }
+    if (!isSelectable(endOptions(day, nextStart, dayBookings, editingId), getValues("end"))) {
+      setValue("end", suggestEnd(day, nextStart, dayBookings, editingId) ?? "", options);
+    }
+  }
+
   const fields = {
     title: register("title", { onChange: clearProblem }),
+    date: register("date", {
+      onChange: (event: ChangeEvent<HTMLInputElement>) => {
+        clearProblem();
+        const next = event.target.value;
+        if (!isValidDate(next)) return;
+        setScheduleDate(next);
+        void retime(next);
+      },
+    }),
     end: register("end", { onChange: clearProblem }),
     start: register("start", {
       onChange: (event: ChangeEvent<HTMLSelectElement>) => {
         clearProblem();
         const nextStart = event.target.value;
-        if (isSelectable(endOptions(date, nextStart, bookings, editingId), getValues("end"))) return;
-        setValue("end", suggestEnd(date, nextStart, bookings, editingId) ?? "", {
+        if (isSelectable(endOptions(scheduleDate, nextStart, bookings, editingId), getValues("end"))) return;
+        setValue("end", suggestEnd(scheduleDate, nextStart, bookings, editingId) ?? "", {
           shouldValidate: formState.isSubmitted,
         });
       },
@@ -92,20 +124,21 @@ export function useBookingForm({ target, date, bookings, onDone, onConflict }: B
   const submit = handleSubmit(async (values) => {
     setProblem(null);
     const title = values.title.trim();
+    const { date: savedDate, start, end } = values;
     try {
       if (editing) {
-        await updateBooking.mutateAsync({ booking: editing, patch: { start: values.start, end: values.end, title } });
+        await updateBooking.mutateAsync({ booking: editing, patch: { date: savedDate, start, end, title } });
       } else {
-        await createBooking.mutateAsync({ date, start: values.start, end: values.end, title: title || undefined });
+        await createBooking.mutateAsync({ date: savedDate, start, end, title: title || undefined });
       }
       toast.success(editing ? "Бронь обновлена" : "Бронь создана", {
-        description: `${formatDateShort(date)}, ${values.start}–${values.end}${title ? ` · ${title}` : ""}`,
+        description: `${formatDateShort(savedDate)}, ${start}–${end}${title ? ` · ${title}` : ""}`,
       });
-      onDone();
+      onDone(savedDate);
     } catch (error) {
       if (closeIfStale(error, onDone)) return;
       if (isApiError(error, "validation")) {
-        for (const v of error.violations) setError(fieldOf(v), { type: v.code, message: v.message });
+        for (const v of error.violations) setError(v.field, { type: v.code, message: v.message });
       }
       if (isApiError(error, "conflict") && error.conflictWith) onConflict(error.conflictWith.id);
       setProblem(describeWriteFailure(error));
@@ -115,14 +148,23 @@ export function useBookingForm({ target, date, bookings, onDone, onConflict }: B
   const duration =
     isValidTime(start) && isValidTime(end) && toMinutes(end) > toMinutes(start) ? formatDuration(start, end) : null;
 
+  const scheduleStatus = scheduleReady
+    ? null
+    : schedule.isError
+      ? `Не удалось загрузить расписание на эту дату. ${errorMessage(schedule.error)}`
+      : "Загружаем расписание на эту дату…";
+
   return {
     editing,
     fields,
     errors: formState.errors,
     isSubmitting: formState.isSubmitting,
     problem,
-    startChoices: startOptions(date, bookings, now, editingId),
-    endChoices: endOptions(date, start, bookings, editingId),
+    minDate: toISODate(now),
+    scheduleReady,
+    scheduleStatus,
+    startChoices: startOptions(scheduleDate, bookings, now, editingId),
+    endChoices: endOptions(scheduleDate, start, bookings, editingId),
     duration,
     submit,
   };
@@ -131,9 +173,9 @@ export function useBookingForm({ target, date, bookings, onDone, onConflict }: B
 function initialValues(target: BookingFormTarget, date: ISODate, bookings: Booking[], now: Date): BookingFormValues {
   if (target.mode === "edit") {
     const { start, end, title } = target.booking;
-    return { start, end, title: title ?? "" };
+    return { date, start, end, title: title ?? "" };
   }
   const start = target.start ?? firstFreeStart(date, bookings, now) ?? "";
   const end = start ? (suggestEnd(date, start, bookings) ?? "") : "";
-  return { start, end, title: "" };
+  return { date, start, end, title: "" };
 }

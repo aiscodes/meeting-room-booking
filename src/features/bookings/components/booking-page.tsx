@@ -116,8 +116,8 @@ export function BookingPage({ date, onDateChange }: Props) {
       <BookingDialog
         target={target}
         date={date}
-        bookings={bookings}
         onClose={() => setTarget(null)}
+        onSaved={onDateChange}
         onConflict={setHighlightId}
       />
     </main>

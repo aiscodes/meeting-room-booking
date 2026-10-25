@@ -13,9 +13,22 @@ import { DeleteBookingButton } from "./delete-booking-button";
 import { TimeSelect } from "./time-select";
 
 export function BookingForm(props: BookingFormOptions) {
-  const { editing, fields, errors, isSubmitting, problem, startChoices, endChoices, duration, submit } =
-    useBookingForm(props);
+  const {
+    editing,
+    fields,
+    errors,
+    isSubmitting,
+    problem,
+    minDate,
+    scheduleReady,
+    scheduleStatus,
+    startChoices,
+    endChoices,
+    duration,
+    submit,
+  } = useBookingForm(props);
   const durationId = useId();
+  const scheduleStatusId = useId();
 
   return (
     <form onSubmit={submit} noValidate className="mt-5 space-y-5">
@@ -42,6 +55,15 @@ export function BookingForm(props: BookingFormOptions) {
         )}
       </FormField>
 
+      <FormField label="Дата" error={errors.date?.message} describedBy={scheduleStatusId}>
+        {(control) => (
+          <input {...control} {...fields.date} type="date" min={minDate} className={`${controlClassName} tabular-nums`} />
+        )}
+      </FormField>
+      <p id={scheduleStatusId} role="status" className="-mt-3 text-sm text-slate-600 empty:hidden">
+        {scheduleStatus}
+      </p>
+
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Начало" error={errors.start?.message}>
           {(control) => <TimeSelect {...control} {...fields.start} options={startChoices} />}
@@ -57,13 +79,13 @@ export function BookingForm(props: BookingFormOptions) {
 
       <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
         {editing && (
-          <DeleteBookingButton booking={editing} disabled={isSubmitting} onDeleted={props.onDone} />
+          <DeleteBookingButton booking={editing} disabled={isSubmitting} onDeleted={() => props.onDone()} />
         )}
         <div className="flex flex-col-reverse gap-3 sm:ml-auto sm:flex-row">
-          <Button onClick={props.onDone} disabled={isSubmitting}>
+          <Button onClick={() => props.onDone()} disabled={isSubmitting}>
             Отмена
           </Button>
-          <Button type="submit" variant="primary" loading={isSubmitting}>
+          <Button type="submit" variant="primary" loading={isSubmitting} disabled={!scheduleReady}>
             {isSubmitting ? "Сохраняем…" : editing ? "Сохранить" : "Забронировать"}
           </Button>
         </div>

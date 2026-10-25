@@ -30,14 +30,15 @@ beforeEach(() => {
 
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  render(
+  const tree = (now: Date) => (
     <QueryClientProvider client={client}>
-      <NowProvider value={NOW}>
+      <NowProvider value={now}>
         <BookingApp />
       </NowProvider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
-  return userEvent.setup();
+  const { rerender } = render(tree(NOW));
+  return Object.assign(userEvent.setup(), { setNow: (now: Date) => rerender(tree(now)) });
 }
 
 const schedule = () => screen.getByRole("list", { name: /Расписание/, hidden: true });
@@ -134,6 +135,62 @@ describe("BookingApp", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(store.get("standup")).toBeUndefined();
     expect(await screen.findByText("На эту дату броней нет.")).toBeInTheDocument();
+  });
+
+  it("moves a booking to another date and follows it there", async () => {
+    const user = renderPage();
+    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Изменить бронь" });
+
+    const date = within(dialog).getByLabelText("Дата");
+    await user.clear(date);
+    await user.type(date, "2030-01-16");
+    await user.click(within(dialog).getByRole("button", { name: "Сохранить" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(store.get("standup")).toMatchObject({ date: "2030-01-16", start: "09:00", end: "10:00" });
+    expect(window.location.search).toBe("?date=2030-01-16");
+    expect(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ })).toBeInTheDocument();
+    expect(store.list(TODAY)).toHaveLength(0);
+  });
+
+  it("re-times the booking when the new date is busy at that time", async () => {
+    store.insert({ date: "2030-01-16", start: "09:00", end: "10:00", title: "Занято" });
+    const user = renderPage();
+    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Изменить бронь" });
+
+    const date = within(dialog).getByLabelText("Дата");
+    await user.clear(date);
+    await user.type(date, "2030-01-16");
+
+    await waitFor(() => expect(within(dialog).getByLabelText("Начало")).toHaveValue("10:00"));
+    expect(within(dialog).getByLabelText("Окончание")).toHaveValue("11:00");
+  });
+
+  it("navigates between dates with the browser back button", async () => {
+    const user = renderPage();
+    await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ });
+
+    await user.click(screen.getByRole("button", { name: "Следующий день" }));
+    expect(await screen.findByText("На эту дату броней нет.")).toBeInTheDocument();
+    expect(window.location.search).toBe("?date=2030-01-16");
+
+    window.history.back();
+    expect(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ })).toBeInTheDocument();
+    expect(window.location.search).toBe("");
+  });
+
+  it("explains that a booking has started while its form was open", async () => {
+    const user = renderPage();
+    await user.click(await screen.findByRole("button", { name: /Стендап, 09:00–10:00/ }));
+    const dialog = await screen.findByRole("dialog", { name: "Изменить бронь" });
+
+    user.setNow(new Date(2030, 0, 15, 9, 15));
+    await user.click(within(dialog).getByRole("button", { name: "Сохранить" }));
+
+    expect(await within(dialog).findByText("Бронь уже началась — её нельзя изменить")).toBeInTheDocument();
+    expect(store.get("standup")?.end).toBe("10:00");
   });
 
   it("shows past dates read-only", async () => {

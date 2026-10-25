@@ -202,8 +202,9 @@ export function firstFreeStart(
   date: ISODate,
   bookings: readonly Booking[],
   now: Date,
+  editingId?: string,
 ): ClockTime | undefined {
-  return startOptions(date, bookings, now).find((o) => !o.disabled)?.value;
+  return startOptions(date, bookings, now, editingId).find((o) => !o.disabled)?.value;
 }
 
 export function sortByStart(bookings: readonly Booking[]): Booking[] {

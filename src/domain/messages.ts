@@ -11,6 +11,8 @@ export function formatMinutes(minutes: number): string {
 export const WORKDAY_LABEL = formatRange(fromMinutes(WORKDAY_START), fromMinutes(WORKDAY_END));
 export const DURATION_LIMITS_LABEL = `от ${formatMinutes(MIN_DURATION)} до ${formatMinutes(MAX_DURATION)}`;
 
+export const BOOKING_STARTED_MESSAGE = "Бронь уже началась — её нельзя изменить";
+
 export function bookingLabel(booking: Booking): string {
   const range = formatRange(booking.start, booking.end);
   return booking.title ? `${range} «${booking.title}»` : range;

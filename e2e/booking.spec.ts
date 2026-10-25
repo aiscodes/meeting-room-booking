@@ -42,6 +42,23 @@ test("creates, edits and deletes a booking", async ({ page }) => {
   await expect(page.getByText("На эту дату броней нет.")).toBeVisible();
 });
 
+test("moves a booking to another date and returns with the back button", async ({ page }) => {
+  await openEmptyDay(page);
+  await createBooking(page, "Перенос");
+
+  await page.getByRole("button", { name: /Перенос, 09:00–10:00/ }).click();
+  const edit = page.getByRole("dialog", { name: "Изменить бронь" });
+  await edit.getByLabel("Дата").fill(futureDate(8));
+  await edit.getByRole("button", { name: "Сохранить" }).click();
+
+  await expect(page).toHaveURL(new RegExp(`date=${futureDate(8)}`));
+  await expect(page.getByRole("button", { name: /Перенос, 09:00–10:00/ })).toBeVisible();
+
+  await page.goBack();
+  await expect(page).toHaveURL(new RegExp(`date=${futureDate()}`));
+  await expect(page.getByText("На эту дату броней нет.")).toBeVisible();
+});
+
 test("keeps the form and explains a 409 from the server", async ({ page }) => {
   await openEmptyDay(page);
 

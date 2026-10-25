@@ -2,10 +2,8 @@
 
 import { X } from "lucide-react";
 import { Dialog } from "radix-ui";
-import type { Booking } from "@/domain/booking";
-import { WORKDAY_LABEL } from "@/domain/messages";
+import { DURATION_LIMITS_LABEL, WORKDAY_LABEL } from "@/domain/messages";
 import type { ISODate } from "@/domain/time";
-import { formatDateHeading } from "../format";
 import { useIsWritingBookings } from "../queries";
 import type { BookingFormTarget } from "../use-booking-form";
 import { BookingForm } from "./booking-form";
@@ -13,12 +11,12 @@ import { BookingForm } from "./booking-form";
 type Props = {
   target: BookingFormTarget | null;
   date: ISODate;
-  bookings: Booking[];
   onClose: () => void;
+  onSaved: (date: ISODate) => void;
   onConflict: (bookingId: string) => void;
 };
 
-export function BookingDialog({ target, date, bookings, onClose, onConflict }: Props) {
+export function BookingDialog({ target, date, onClose, onSaved, onConflict }: Props) {
   // Closing mid-request would lose the result, including a 409.
   const busy = useIsWritingBookings();
   const formKey = target ? (target.mode === "edit" ? target.booking.id : `new-${target.start ?? ""}`) : "closed";
@@ -34,7 +32,7 @@ export function BookingDialog({ target, date, bookings, onClose, onConflict }: P
                 {target?.mode === "edit" ? "Изменить бронь" : "Новая бронь"}
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-slate-600">
-                {formatDateHeading(date)} · рабочий день {WORKDAY_LABEL}
+                Рабочий день {WORKDAY_LABEL}, {DURATION_LIMITS_LABEL}
               </Dialog.Description>
             </div>
             <Dialog.Close
@@ -50,8 +48,10 @@ export function BookingDialog({ target, date, bookings, onClose, onConflict }: P
               key={formKey}
               target={target}
               date={date}
-              bookings={bookings}
-              onDone={onClose}
+              onDone={(savedDate) => {
+                onClose();
+                if (savedDate) onSaved(savedDate);
+              }}
               onConflict={onConflict}
             />
           )}
